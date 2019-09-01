@@ -1,0 +1,10 @@
+
+[global.databases]
+db = { url = "postgres://postgres:postgres@localhost:5433/money-manager" }
+
+[development]
+# secret_key = "8Xui8SN4mI+7egV/9dlfYYLGQJeEx4+DwmSQLwDVXJg="
+jwt_key = "pluto"
+jwt_exp = 900
+# log = "debug"
+# db = { url = "postgres://postgres:postgres@localhost:5433/money-manager" }

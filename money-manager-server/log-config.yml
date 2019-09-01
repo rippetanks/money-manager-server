@@ -1,0 +1,20 @@
+refresh_rate: 30 seconds
+appenders:
+    stdout:
+        kind: console
+        encoder:
+            pattern: "{d(%Y-%m-%dT%H:%M:%S%z)} - [{l}] [{M}] - {h({m})} {n}"
+    money-manager-server:
+        kind: console
+        encoder:
+            pattern: "{d(%Y-%m-%dT%H:%M:%S%z)} - [{l}] [{M}] [{f} - {L}] - {h({m})}{n}"
+root:
+    level: trace
+    appenders:
+        - stdout
+loggers:
+    money_manager_server:
+        level: trace
+        appenders:
+            - money-manager-server
+        additive: false
