@@ -16,6 +16,8 @@ mod schema;
 mod auth;
 mod causal;
 mod user;
+mod account;
+mod currency;
 
 fn main() {
     log4rs::init_file("log-config.yml", Default::default()).unwrap();

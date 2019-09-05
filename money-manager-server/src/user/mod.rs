@@ -47,16 +47,15 @@ fn create(conn: MoneyManagerDB, user: Json<UserJSON>) -> Result<Json<User>, Stat
         })
 }
 
-/* DISABLED FOR SECURITY REASON
+/* DISABLED FOR SECURITY REASON */
 #[get("/")]
 fn read(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<User>>, Custom<String>> {
     debug!("READ_USER_REQUEST");
     let result = User::read(&conn);
     User::unpack(result)
 }
-*/
 
-/* DISABLED FOR SECURITY REASON
+/* DISABLED FOR SECURITY REASON */
 #[get("/<id>")]
 fn read_one(conn: MoneyManagerDB, id: i64, user: User) -> Option<Json<User>> {
     debug!("READ_ONE_USER_REQUEST");
@@ -69,7 +68,6 @@ fn read_one(conn: MoneyManagerDB, id: i64, user: User) -> Option<Json<User>> {
         }
     }
 }
-*/
 
 #[get("/user")]
 fn read_for_user(conn: MoneyManagerDB, user: User) -> Json<User> {

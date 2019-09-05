@@ -13,7 +13,7 @@ table! {
 }
 
 table! {
-    AccountType (id) {
+    account_type (id) {
         id -> Int4,
         #[sql_name = "type"]
         type_ -> Varchar,
@@ -21,7 +21,7 @@ table! {
 }
 
 table! {
-    AccountUser (id_account, id_user) {
+    account_user (id_account, id_user) {
         id_account -> Int8,
         id_user -> Int8,
     }
@@ -47,9 +47,9 @@ table! {
 }
 
 table! {
-    Currency (id) {
+    currency (id) {
         id -> Int2,
-        currency -> Varchar,
+        description -> Varchar,
     }
 }
 
@@ -133,28 +133,28 @@ table! {
     }
 }
 
-joinable!(AccountUser -> account (id_account));
-joinable!(AccountUser -> user (id_user));
 joinable!(Detail -> user (id_user));
-joinable!(Giro -> Currency (id_currency));
+joinable!(Giro -> currency (id_currency));
 joinable!(Place -> user (id_user));
-joinable!(Transaction -> Currency (id_currency));
 joinable!(Transaction -> Place (id_place));
 joinable!(Transaction -> TransactionType (id_transaction_type));
+joinable!(Transaction -> currency (id_currency));
 joinable!(TransactionDetail -> Detail (id_detail));
 joinable!(TransactionDetail -> Transaction (id_transaction));
-joinable!(account -> AccountType (id_account_type));
-joinable!(account -> Currency (id_currency));
+joinable!(account -> account_type (id_account_type));
+joinable!(account -> currency (id_currency));
+joinable!(account_user -> account (id_account));
+joinable!(account_user -> user (id_user));
 joinable!(auth -> user (id));
 joinable!(causal -> user (id_user));
 
 allow_tables_to_appear_in_same_query!(
     account,
-    AccountType,
-    AccountUser,
+    account_type,
+    account_user,
     auth,
     causal,
-    Currency,
+    currency,
     Detail,
     Giro,
     Place,

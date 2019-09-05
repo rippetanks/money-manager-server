@@ -101,23 +101,23 @@ SET default_with_oids = false;
 
 --
 -- TOC entry 197 (class 1259 OID 16619)
--- Name: AccountType; Type: TABLE; Schema: public; Owner: postgres
+-- Name: account_type; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public."AccountType" (
+CREATE TABLE public."account_type" (
     id integer NOT NULL,
     type character varying(32) NOT NULL
 );
 
 
-ALTER TABLE public."AccountType" OWNER TO postgres;
+ALTER TABLE public.account_type OWNER TO postgres;
 
 --
 -- TOC entry 196 (class 1259 OID 16617)
--- Name: AccountType_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: account_type_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public."AccountType_id_seq"
+CREATE SEQUENCE public."account_type_id_seq"
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -126,29 +126,29 @@ CREATE SEQUENCE public."AccountType_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."AccountType_id_seq" OWNER TO postgres;
+ALTER TABLE public."account_type_id_seq" OWNER TO postgres;
 
 --
 -- TOC entry 2929 (class 0 OID 0)
 -- Dependencies: 196
--- Name: AccountType_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: account_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public."AccountType_id_seq" OWNED BY public."AccountType".id;
+ALTER SEQUENCE public."account_type_id_seq" OWNED BY public."account_type".id;
 
 
 --
 -- TOC entry 202 (class 1259 OID 16644)
--- Name: AccountUser; Type: TABLE; Schema: public; Owner: postgres
+-- Name: account_user; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public."AccountUser" (
+CREATE TABLE public."account_user" (
     id_account bigint NOT NULL,
     id_user bigint NOT NULL
 );
 
 
-ALTER TABLE public."AccountUser" OWNER TO postgres;
+ALTER TABLE public.account_user OWNER TO postgres;
 
 --
 -- TOC entry 201 (class 1259 OID 16638)
@@ -275,23 +275,23 @@ ALTER SEQUENCE public."Causal_id_seq" OWNED BY public.causal.id;
 
 --
 -- TOC entry 215 (class 1259 OID 16811)
--- Name: Currency; Type: TABLE; Schema: public; Owner: postgres
+-- Name: currency; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public."Currency" (
+CREATE TABLE public."currency" (
     id smallint NOT NULL,
     currency character varying(12) NOT NULL
 );
 
 
-ALTER TABLE public."Currency" OWNER TO postgres;
+ALTER TABLE public.currency OWNER TO postgres;
 
 --
 -- TOC entry 214 (class 1259 OID 16809)
--- Name: Currency_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: currency_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public."Currency_id_seq"
+CREATE SEQUENCE public."currency_id_seq"
     AS smallint
     START WITH 1
     INCREMENT BY 1
@@ -300,15 +300,15 @@ CREATE SEQUENCE public."Currency_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."Currency_id_seq" OWNER TO postgres;
+ALTER TABLE public."currency_id_seq" OWNER TO postgres;
 
 --
 -- TOC entry 2933 (class 0 OID 0)
 -- Dependencies: 214
--- Name: Currency_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: currency_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public."Currency_id_seq" OWNED BY public."Currency".id;
+ALTER SEQUENCE public."currency_id_seq" OWNED BY public."currency".id;
 
 
 --
@@ -568,18 +568,18 @@ ALTER TABLE public.__diesel_schema_migrations OWNER TO postgres;
 
 --
 -- TOC entry 2744 (class 2604 OID 16622)
--- Name: AccountType id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: account_type id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."AccountType" ALTER COLUMN id SET DEFAULT nextval('public."AccountType_id_seq"'::regclass);
+ALTER TABLE ONLY public."account_type" ALTER COLUMN id SET DEFAULT nextval('public."account_type_id_seq"'::regclass);
 
 
 --
 -- TOC entry 2752 (class 2604 OID 16814)
--- Name: Currency id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: currency id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."Currency" ALTER COLUMN id SET DEFAULT nextval('public."Currency_id_seq"'::regclass);
+ALTER TABLE ONLY public."currency" ALTER COLUMN id SET DEFAULT nextval('public."currency_id_seq"'::regclass);
 
 
 --
@@ -640,20 +640,20 @@ ALTER TABLE ONLY public."user" ALTER COLUMN id SET DEFAULT nextval('public."User
 
 --
 -- TOC entry 2755 (class 2606 OID 16624)
--- Name: AccountType AccountType_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: account_type account_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."AccountType"
-    ADD CONSTRAINT "AccountType_pkey" PRIMARY KEY (id);
+ALTER TABLE ONLY public."account_type"
+    ADD CONSTRAINT "account_type_pkey" PRIMARY KEY (id);
 
 
 --
 -- TOC entry 2761 (class 2606 OID 16648)
--- Name: AccountUser AccountUser_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: account_user account_user_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."AccountUser"
-    ADD CONSTRAINT "AccountUser_pkey" PRIMARY KEY (id_account, id_user);
+ALTER TABLE ONLY public."account_user"
+    ADD CONSTRAINT "account_user_pkey" PRIMARY KEY (id_account, id_user);
 
 
 --
@@ -685,11 +685,11 @@ ALTER TABLE ONLY public.causal
 
 --
 -- TOC entry 2775 (class 2606 OID 16816)
--- Name: Currency Currency_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: currency currency_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."Currency"
-    ADD CONSTRAINT "Currency_pkey" PRIMARY KEY (id);
+ALTER TABLE ONLY public."currency"
+    ADD CONSTRAINT "currency_pkey" PRIMARY KEY (id);
 
 
 --
@@ -766,19 +766,19 @@ ALTER TABLE ONLY public.__diesel_schema_migrations
 
 --
 -- TOC entry 2784 (class 2606 OID 16654)
--- Name: AccountUser account__user_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: account_user account__user_account_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."AccountUser"
+ALTER TABLE ONLY public."account_user"
     ADD CONSTRAINT account__user_account_fk FOREIGN KEY (id_account) REFERENCES public.account(id);
 
 
 --
 -- TOC entry 2785 (class 2606 OID 16649)
--- Name: AccountUser account__user_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: account_user account__user_user_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public."AccountUser"
+ALTER TABLE ONLY public."account_user"
     ADD CONSTRAINT account__user_user_fk FOREIGN KEY (id_user) REFERENCES public."user"(id);
 
 
@@ -788,7 +788,7 @@ ALTER TABLE ONLY public."AccountUser"
 --
 
 ALTER TABLE ONLY public.account
-    ADD CONSTRAINT account_account_type_fk FOREIGN KEY (id_account_type) REFERENCES public."AccountType"(id);
+    ADD CONSTRAINT account_account_type_fk FOREIGN KEY (id_account_type) REFERENCES public."account_type"(id);
 
 
 --
@@ -797,7 +797,7 @@ ALTER TABLE ONLY public.account
 --
 
 ALTER TABLE ONLY public.account
-    ADD CONSTRAINT account_currency_fk FOREIGN KEY (id_currency) REFERENCES public."Currency"(id);
+    ADD CONSTRAINT account_currency_fk FOREIGN KEY (id_currency) REFERENCES public."currency"(id);
 
 
 --
@@ -851,7 +851,7 @@ ALTER TABLE ONLY public."Giro"
 --
 
 ALTER TABLE ONLY public."Giro"
-    ADD CONSTRAINT giro_currency_fk FOREIGN KEY (id_currency) REFERENCES public."Currency"(id);
+    ADD CONSTRAINT giro_currency_fk FOREIGN KEY (id_currency) REFERENCES public."currency"(id);
 
 
 --
@@ -887,7 +887,7 @@ ALTER TABLE ONLY public."Transaction"
 --
 
 ALTER TABLE ONLY public."Transaction"
-    ADD CONSTRAINT transaction_currency_fk FOREIGN KEY (id_currency) REFERENCES public."Currency"(id);
+    ADD CONSTRAINT transaction_currency_fk FOREIGN KEY (id_currency) REFERENCES public."currency"(id);
 
 
 --

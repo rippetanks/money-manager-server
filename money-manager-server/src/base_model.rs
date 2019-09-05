@@ -7,6 +7,8 @@ use diesel::result::Error;
 use crate::auth::model::Auth;
 use crate::user::model::User;
 use crate::causal::model::Causal;
+use crate::account::model::{Account, AccountType};
+use crate::currency::model::Currency;
 
 pub trait BaseModel<T> {
     fn unpack(result: Result<Vec<T>, Error>) -> Result<Json<Vec<T>>, Custom<String>> {
@@ -26,3 +28,6 @@ pub trait BaseModel<T> {
 impl BaseModel<Auth> for Auth { }
 impl BaseModel<User> for User { }
 impl BaseModel<Causal> for Causal { }
+impl BaseModel<Account> for Account { }
+impl BaseModel<AccountType> for AccountType { }
+impl BaseModel<Currency> for Currency { }

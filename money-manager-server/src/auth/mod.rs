@@ -70,13 +70,12 @@ fn login(conn: MoneyManagerDB, auth_json: Json<AuthCreate>, extra: State<Extras>
     }
 }
 
-/* DISABLED FOR SECURITY REASON
+/* DISABLED FOR SECURITY REASON */
 #[get("/")]
 fn read(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<Auth>>, Custom<String>> {
     let result = Auth::read(&conn);
     Auth::unpack(result)
 }
-*/
 
 #[get("/")]
 fn read_one(conn: MoneyManagerDB, user: User) -> Option<Json<Auth>> {

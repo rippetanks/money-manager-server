@@ -1,9 +1,12 @@
 
+use rocket::fairing::AdHoc;
+
 use crate::database::MoneyManagerDB;
 use crate::causal;
 use crate::user;
 use crate::auth;
-use rocket::fairing::AdHoc;
+use crate::account;
+use crate::currency;
 
 #[derive(Debug)]
 pub struct Extras {
@@ -33,6 +36,9 @@ pub fn init(host: &String) {
     rocket = causal::mount(rocket);
     rocket = user::mount(rocket);
     rocket = auth::mount(rocket);
+    rocket = account::mount(rocket);
+    rocket = account::mount_account_type(rocket);
+    rocket = currency::mount(rocket);
 
     rocket.launch();
 }

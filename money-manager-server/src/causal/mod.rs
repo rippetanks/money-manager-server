@@ -10,7 +10,6 @@ use crate::base_model::BaseModel;
 use crate::auth::auth::ApiKey;
 use crate::causal::model::{Causal, CausalForm};
 use crate::user::model::User;
-use std::borrow::Borrow;
 
 pub mod model;
 
@@ -31,14 +30,13 @@ fn create(conn: MoneyManagerDB, causal: Json<CausalJSON>, user: User) -> Result<
         .map_err(|_| Status::InternalServerError)
 }
 
-/* DISABLED FOR SECURITY REASON
+/* DISABLED FOR SECURITY REASON */
 #[get("/")]
 fn read(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<Causal>>, Custom<String>> {
     debug!("READ_CAUSAL_REQUEST");
     let result = Causal::read(&conn);
     Causal::unpack(result)
 }
-*/
 
 #[get("/user")]
 fn read_for_user(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<Causal>>, Custom<String>> {
@@ -70,7 +68,7 @@ fn read_one(conn: MoneyManagerDB, id: i64, user: User) -> Result<Json<Causal>, S
 #[put("/<id>", data = "<causal>", format = "application/json")]
 fn update(conn: MoneyManagerDB, id: i64, causal: Json<CausalJSON>, user: User) -> Status {
     debug!("UPDATE_CAUSAL_REQUEST");
-    let mut update = CausalForm {
+    let update = CausalForm {
         description: causal.description.to_string(),
         id_user: Some(user.id)
     };
