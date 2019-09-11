@@ -9,6 +9,10 @@ use crate::user::model::User;
 use crate::causal::model::Causal;
 use crate::account::model::{Account, AccountType};
 use crate::currency::model::Currency;
+use crate::transaction::model::{Transaction, TransactionType, TransactionDetail};
+use crate::place::model::Place;
+use crate::detail::model::Detail;
+use crate::giro::model::Giro;
 
 pub trait BaseModel<T> {
     fn unpack(result: Result<Vec<T>, Error>) -> Result<Json<Vec<T>>, Custom<String>> {
@@ -31,3 +35,9 @@ impl BaseModel<Causal> for Causal { }
 impl BaseModel<Account> for Account { }
 impl BaseModel<AccountType> for AccountType { }
 impl BaseModel<Currency> for Currency { }
+impl BaseModel<Transaction> for Transaction { }
+impl BaseModel<TransactionType> for TransactionType { }
+impl BaseModel<TransactionDetail> for TransactionDetail { }
+impl BaseModel<Place> for Place { }
+impl BaseModel<Detail> for Detail { }
+impl BaseModel<Giro> for Giro { }

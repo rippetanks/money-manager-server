@@ -48,6 +48,7 @@ fn create(conn: MoneyManagerDB, user: Json<UserJSON>) -> Result<Json<User>, Stat
 }
 
 /* DISABLED FOR SECURITY REASON */
+#[allow(dead_code)]
 #[get("/")]
 fn read(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<User>>, Custom<String>> {
     debug!("READ_USER_REQUEST");
@@ -56,6 +57,7 @@ fn read(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<User>>, Custom<Stri
 }
 
 /* DISABLED FOR SECURITY REASON */
+#[allow(dead_code)]
 #[get("/<id>")]
 fn read_one(conn: MoneyManagerDB, id: i64, user: User) -> Option<Json<User>> {
     debug!("READ_ONE_USER_REQUEST");

@@ -54,7 +54,7 @@ table! {
 }
 
 table! {
-    Detail (id) {
+    detail (id) {
         id -> Int8,
         description -> Varchar,
         id_user -> Nullable<Int8>,
@@ -62,7 +62,7 @@ table! {
 }
 
 table! {
-    Giro (id) {
+    giro (id) {
         id -> Int8,
         id_source_account -> Int8,
         id_destination_account -> Int8,
@@ -75,9 +75,9 @@ table! {
 }
 
 table! {
-    Place (id) {
+    place (id) {
         id -> Int8,
-        place -> Varchar,
+        name -> Varchar,
         address -> Nullable<Varchar>,
         country -> Nullable<Varchar>,
         email -> Nullable<Varchar>,
@@ -89,7 +89,7 @@ table! {
 }
 
 table! {
-    Transaction (id) {
+    transaction (id) {
         id -> Int8,
         id_account -> Int8,
         id_transaction_type -> Int4,
@@ -105,7 +105,7 @@ table! {
 }
 
 table! {
-    TransactionDetail (id_detail, id_transaction) {
+    transaction_detail (id_detail, id_transaction) {
         id_detail -> Int8,
         id_transaction -> Int8,
         amount -> Nullable<Int2>,
@@ -113,7 +113,7 @@ table! {
 }
 
 table! {
-    TransactionType (id) {
+    transaction_type (id) {
         id -> Int4,
         #[sql_name = "type"]
         type_ -> Varchar,
@@ -133,20 +133,20 @@ table! {
     }
 }
 
-joinable!(Detail -> user (id_user));
-joinable!(Giro -> currency (id_currency));
-joinable!(Place -> user (id_user));
-joinable!(Transaction -> Place (id_place));
-joinable!(Transaction -> TransactionType (id_transaction_type));
-joinable!(Transaction -> currency (id_currency));
-joinable!(TransactionDetail -> Detail (id_detail));
-joinable!(TransactionDetail -> Transaction (id_transaction));
 joinable!(account -> account_type (id_account_type));
 joinable!(account -> currency (id_currency));
 joinable!(account_user -> account (id_account));
 joinable!(account_user -> user (id_user));
 joinable!(auth -> user (id));
 joinable!(causal -> user (id_user));
+joinable!(detail -> user (id_user));
+joinable!(giro -> currency (id_currency));
+joinable!(place -> user (id_user));
+joinable!(transaction -> currency (id_currency));
+joinable!(transaction -> place (id_place));
+joinable!(transaction -> transaction_type (id_transaction_type));
+joinable!(transaction_detail -> detail (id_detail));
+joinable!(transaction_detail -> transaction (id_transaction));
 
 allow_tables_to_appear_in_same_query!(
     account,
@@ -155,11 +155,11 @@ allow_tables_to_appear_in_same_query!(
     auth,
     causal,
     currency,
-    Detail,
-    Giro,
-    Place,
-    Transaction,
-    TransactionDetail,
-    TransactionType,
+    detail,
+    giro,
+    place,
+    transaction,
+    transaction_detail,
+    transaction_type,
     user,
 );

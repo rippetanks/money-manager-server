@@ -18,6 +18,10 @@ mod causal;
 mod user;
 mod account;
 mod currency;
+mod transaction;
+mod place;
+mod detail;
+mod giro;
 
 fn main() {
     log4rs::init_file("log-config.yml", Default::default()).unwrap();

@@ -7,6 +7,10 @@ use crate::user;
 use crate::auth;
 use crate::account;
 use crate::currency;
+use crate::transaction;
+use crate::place;
+use crate::detail;
+use crate::giro;
 
 #[derive(Debug)]
 pub struct Extras {
@@ -27,7 +31,7 @@ pub fn init(host: &String) {
             let jwt_key = config.get_str("jwt_key").unwrap().to_string();
             let jwt_exp = config.get_int("jwt_exp").unwrap() as u64;
             Ok(rocket.manage(Extras {
-               jwt_key,
+                jwt_key,
                 jwt_exp
             }))
         }));
@@ -39,6 +43,12 @@ pub fn init(host: &String) {
     rocket = account::mount(rocket);
     rocket = account::mount_account_type(rocket);
     rocket = currency::mount(rocket);
+    rocket = transaction::mount(rocket);
+    rocket = transaction::mount_transaction_type(rocket);
+    rocket = transaction::mount_transaction_detail(rocket);
+    rocket = place::mount(rocket);
+    rocket = detail::mount(rocket);
+    rocket = giro::mount(rocket);
 
     rocket.launch();
 }

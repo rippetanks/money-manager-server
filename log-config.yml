@@ -9,7 +9,7 @@ appenders:
         encoder:
             pattern: "{d(%Y-%m-%dT%H:%M:%S%z)} - [{l}] [{M}] [{f} - {L}] - {h({m})}{n}"
 root:
-    level: trace
+    level: debug
     appenders:
         - stdout
 loggers:

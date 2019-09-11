@@ -3,6 +3,7 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::expression::dsl::any;
 use chrono::{DateTime, Utc};
+use diesel::result::Error;
 use serde::{Serialize, Deserialize};
 
 use crate::schema::{account, account_user, account_type};
@@ -43,8 +44,8 @@ pub struct AccountForm {
 #[belongs_to(User, foreign_key = "id_user")]
 #[derive(Debug,Serialize,Deserialize,Queryable,Insertable,Associations)]
 pub struct AccountUser {
-    pub id_user: i64,
-    pub id_account: i64
+    pub id_account: i64,
+    pub id_user: i64
 }
 
 #[table_name="account_type"]
@@ -90,7 +91,25 @@ impl Account {
             .execute(&*(*conn)).is_ok()
     }
     pub fn delete(id: i64, conn: &MoneyManagerDB) -> bool {
-        let result = diesel::delete(account_user::table
+        let res = conn.transaction::<(), Error, _>(|| {
+            // TODO move this on AccountUser implementation
+            diesel::delete(account_user::table
+                .filter(account_user::id_account.eq(id)))
+                .execute(&**conn)
+                .map_err(|e| {
+                    warn!("{}", e);
+                    e
+                })?;
+            diesel::delete(account::table.find(id))
+                .execute(&*(*conn))
+                .map_err(|e| {
+                    warn!("{}", e);
+                    e
+                })?;
+            Ok(())
+        });
+        res.is_ok()
+        /*let result = diesel::delete(account_user::table
             .filter(account_user::id_account.eq(id)))
             .execute(&**conn);
         if result.is_ok() {
@@ -99,7 +118,7 @@ impl Account {
                 .map_err(|e| warn!("{}", e)).is_ok()
         } else {
             result.map_err(|e| warn!("{}", e)).is_ok()
-        }
+        }*/
     }
 }
 
@@ -123,10 +142,10 @@ impl AccountUser {
             .filter(account_user::id_account.eq(account.id))
             .load::<AccountUser>(&**conn)
     }
-    pub fn read_by_au(conn: &MoneyManagerDB, account: &Account, user: &User) -> QueryResult<AccountUser> {
+    pub fn read_by_au(conn: &MoneyManagerDB, user: &User, id_account: i64) -> QueryResult<AccountUser> {
         account_user::table
             .filter(account_user::id_user.eq(user.id))
-            .filter(account_user::id_account.eq(account.id))
+            .filter(account_user::id_account.eq(id_account))
             .first::<AccountUser>(&**conn)
     }
     pub fn delete(conn: &MoneyManagerDB, user: &User, account: &Account) -> bool {

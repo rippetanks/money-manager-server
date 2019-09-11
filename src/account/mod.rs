@@ -18,6 +18,7 @@ mod account_type;
 #[post("/", data = "<account>", format = "application/json")]
 fn create(conn: MoneyManagerDB, account: Json<AccountForm>, user: User) -> Result<Json<Account>, Status> {
     debug!("CREATE_ACCOUNT_REQUEST");
+    // TODO use transaction instead
     let a = Account::create(account.into_inner(), &conn);
     match a {
         Ok(a) => {
@@ -44,23 +45,18 @@ fn create(conn: MoneyManagerDB, account: Json<AccountForm>, user: User) -> Resul
 #[get("/<id>")]
 fn read_one(conn: MoneyManagerDB, id: i64, user: User) -> Result<Json<Account>, Status> {
     debug!("READ_ONE_ACCOUNT_REQUEST");
-    let result = Account::read_by_id(id, &conn);
-    match &result {
-        Ok(result) => {
-            // a user can access his own account
-            let au = AccountUser::read_by_au(&conn, result, &user);
-            if au.is_err() {
-                warn!("The user attempts to access account that does not belong to it! {}",
-                      au.err().unwrap());
-                return Err(Status::Forbidden);
-            }
-            Ok(Json((*result).clone()))
-        }
-        Err(_) => {
-            warn!("The user attempts to access account that does not exist!");
-            Err(Status::NotFound)
-        }
+    // a user can access his own account
+    let au = AccountUser::read_by_au(&conn, &user, id);
+    if au.is_err() {
+        warn!("The user attempts to access account that does not belong to it! {}", au.err().unwrap());
+        return Err(Status::Forbidden);
     }
+    Account::read_by_id(id, &conn)
+        .map(Json)
+        .map_err(|e| {
+            warn!("The user attempts to access account that maybe does not exist! {}", e);
+            Status::NotFound
+        })
 }
 
 #[get("/user")]
@@ -74,12 +70,7 @@ pub fn read_by_user(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<Account
 fn update(conn: MoneyManagerDB, id: i64, account: Json<AccountForm>, user: User) -> Status {
     debug!("UPDATE_ACCOUNT_REQUEST");
     // check if account can be updated
-    let tmp = Account::read_by_id(id, &conn);
-    if tmp.is_err() {
-        warn!("The user attempts to update account but an error occurred!");
-        return Status::InternalServerError;
-    }
-    let au = AccountUser::read_by_au(&conn, &tmp.ok().unwrap(), &user);
+    let au = AccountUser::read_by_au(&conn, &user, id);
     if au.is_err() {
         warn!("The user attempts to access account that does not belong to it! {}", au.err().unwrap());
         return Status::Forbidden
@@ -96,12 +87,7 @@ fn update(conn: MoneyManagerDB, id: i64, account: Json<AccountForm>, user: User)
 fn delete(conn: MoneyManagerDB, id: i64, user: User) -> Status {
     debug!("DELETE_ACCOUNT_REQUEST");
     // check if causal can be deleted
-    let tmp = Account::read_by_id(id, &conn);
-    if tmp.is_err() {
-        warn!("The user attempts to delete account but an error occurred! {}", tmp.err().unwrap());
-        return Status::InternalServerError;
-    }
-    let au = AccountUser::read_by_au(&conn, &tmp.ok().unwrap(), &user);
+    let au = AccountUser::read_by_au(&conn, &user, id);
     if au.is_err() {
         warn!("The user attempts to access account that does not belong to it! {}", au.err().unwrap());
         return Status::Forbidden

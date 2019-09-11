@@ -323,7 +323,7 @@ CREATE TABLE public."Detail" (
 );
 
 
-ALTER TABLE public."Detail" OWNER TO postgres;
+ALTER TABLE public.detail OWNER TO postgres;
 
 --
 -- TOC entry 212 (class 1259 OID 16779)
@@ -366,7 +366,7 @@ CREATE TABLE public."Giro" (
 );
 
 
-ALTER TABLE public."Giro" OWNER TO postgres;
+ALTER TABLE public.giro OWNER TO postgres;
 
 --
 -- TOC entry 210 (class 1259 OID 16765)
@@ -410,7 +410,7 @@ CREATE TABLE public."Place" (
 );
 
 
-ALTER TABLE public."Place" OWNER TO postgres;
+ALTER TABLE public.place OWNER TO postgres;
 
 --
 -- TOC entry 209 (class 1259 OID 16714)
@@ -432,7 +432,7 @@ CREATE TABLE public."Transaction" (
 );
 
 
-ALTER TABLE public."Transaction" OWNER TO postgres;
+ALTER TABLE public."transaction" OWNER TO postgres;
 
 --
 -- TOC entry 216 (class 1259 OID 16847)
@@ -446,7 +446,7 @@ CREATE TABLE public."TransactionDetail" (
 );
 
 
-ALTER TABLE public."TransactionDetail" OWNER TO postgres;
+ALTER TABLE public.transaction_detail OWNER TO postgres;
 
 --
 -- TOC entry 207 (class 1259 OID 16706)
@@ -459,7 +459,7 @@ CREATE TABLE public."TransactionType" (
 );
 
 
-ALTER TABLE public."TransactionType" OWNER TO postgres;
+ALTER TABLE public.transaction_type OWNER TO postgres;
 
 --
 -- TOC entry 206 (class 1259 OID 16704)

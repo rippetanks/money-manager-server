@@ -11,6 +11,7 @@ use crate::account::model::{AccountType, AccountTypeForm};
 use crate::user::model::User;
 
 /*  DISABLED FOR SECURITY REASON */
+#[allow(dead_code)]
 #[post("/", data = "<at>", format = "application/json")]
 fn create(conn: MoneyManagerDB, at: Json<AccountTypeForm>, user: User) -> Result<Json<AccountType>, Status> {
     debug!("CREATE_ACCOUNT_TYPE_REQUEST");
@@ -44,6 +45,7 @@ fn read(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<AccountType>>, Cust
 }
 
 /*  DISABLED FOR SECURITY REASON */
+#[allow(dead_code)]
 #[put("/<id>", data = "<at>", format = "application/json")]
 fn update(conn: MoneyManagerDB, id: i32, at: Json<AccountTypeForm>, user: User) -> Status {
     debug!("UPDATE_ACCOUNT_TYPE_REQUEST");
@@ -56,6 +58,7 @@ fn update(conn: MoneyManagerDB, id: i32, at: Json<AccountTypeForm>, user: User) 
 }
 
 /*  DISABLED FOR SECURITY REASON */
+#[allow(dead_code)]
 #[delete("/<id>")]
 fn delete(conn: MoneyManagerDB, id: i32, user: User) -> Status {
     debug!("DELETE_ACCOUNT_TYPE_REQUEST");

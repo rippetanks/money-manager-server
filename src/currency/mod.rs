@@ -14,6 +14,7 @@ use crate::currency::model::{Currency, CurrencyForm};
 pub mod model;
 
 /* DISABLED FOR SECURITY REASON */
+#[allow(dead_code)]
 #[post("/", data = "<currency>", format = "application/json")]
 fn create(conn: MoneyManagerDB, currency: Json<CurrencyForm>, user: User) -> Result<Json<Currency>, Status> {
     debug!("CREATE_CURRENCY_REQUEST");
@@ -42,6 +43,7 @@ fn read_one(conn: MoneyManagerDB, id: i16, user: User) -> Result<Json<Currency>,
 }
 
 /* DISABLED FOR SECURITY REASON */
+#[allow(dead_code)]
 #[put("/<id>", data = "<currency>", format = "application/json")]
 fn update(conn: MoneyManagerDB, id: i16, currency: Json<CurrencyForm>, user: User) -> Status {
     debug!("UPDATE_CURRENCY_REQUEST");
@@ -54,6 +56,7 @@ fn update(conn: MoneyManagerDB, id: i16, currency: Json<CurrencyForm>, user: Use
 }
 
 /* DISABLED FOR SECURITY REASON */
+#[allow(dead_code)]
 #[delete("/<id>")]
 fn delete(conn: MoneyManagerDB, id: i16, user: User) -> Status {
     debug!("DELETE_CURRENCY_REQUEST");
