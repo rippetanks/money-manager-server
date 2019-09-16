@@ -5,7 +5,6 @@ use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 
 use crate::schema::{transaction, transaction_type, transaction_detail};
-use crate::user::model::User;
 use crate::account::model::Account;
 use crate::currency::model::Currency;
 use crate::causal:: model::Causal;
@@ -17,7 +16,7 @@ use crate::database::MoneyManagerDB;
 #[belongs_to(TransactionType, foreign_key="id_transaction_type")]
 #[belongs_to(Currency, foreign_key="id_currency")]
 #[belongs_to(Causal, foreign_key="id_causal")]
-#[derive(Debug,Clone,Serialize,Deserialize,Queryable,Identifiable,Associations)]
+#[derive(Debug,Serialize,Deserialize,Queryable,Identifiable,Associations)]
 pub struct Transaction {
     pub id: i64,
     pub id_account: i64,
@@ -35,12 +34,12 @@ pub struct Transaction {
 // only for insert and update
 #[table_name = "transaction"]
 #[derive(Debug,Deserialize,Insertable,AsChangeset)]
-pub struct TransactionForm {
+pub struct TransactionForm<'a> {
     pub id_account: i64,
     pub id_transaction_type: i32,
     pub id_place: Option<i64>,
     pub id_beneficiary: Option<i64>,
-    pub note: Option<String>,
+    pub note: Option<&'a str>,
     pub amount: f64,
     pub data: DateTime<Utc>,
     pub id_currency: i16,
@@ -59,9 +58,9 @@ pub struct TransactionType {
 // only for insert and update
 #[table_name="transaction_type"]
 #[derive(Debug,Deserialize,Insertable,AsChangeset)]
-pub struct TransactionTypeForm {
+pub struct TransactionTypeForm<'a> {
     #[serde(rename="type")]
-    pub type_: String
+    pub type_: &'a str
 }
 
 #[table_name="transaction_detail"]
@@ -76,98 +75,107 @@ pub struct TransactionDetail {
 }
 
 impl Transaction {
-    pub fn create(transaction: TransactionForm, conn: &MoneyManagerDB) -> QueryResult<Transaction> {
+    pub fn create(form: &TransactionForm, conn: &MoneyManagerDB) -> QueryResult<Transaction> {
         diesel::insert_into(transaction::table)
-            .values(&transaction)
+            .values(form)
             .get_result::<Transaction>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read(conn: &MoneyManagerDB) -> QueryResult<Vec<Transaction>> {
-        transaction::table.load::<Transaction>(&**conn)
+        transaction::table.load::<Transaction>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read_by_id(id: i64, conn: &MoneyManagerDB) -> QueryResult<Transaction> {
         transaction::table.find(id).first::<Transaction>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn read_by_account(id: i64, conn: &MoneyManagerDB) -> QueryResult<Vec<Transaction>> {
+    pub fn read_by_account(account: &Account, conn: &MoneyManagerDB) -> QueryResult<Vec<Transaction>> {
         transaction::table
-            .filter(transaction::id_account.eq(id))
-            .load::<Transaction>(&**conn)
+            .filter(transaction::id_account.eq(account.id))
+            .load::<Transaction>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn update(id: i64, transaction: &TransactionForm, conn: &MoneyManagerDB) -> bool {
-        diesel::update(transaction::table.find(id))
-            .set(transaction)
-            .execute(&*(*conn)).is_ok()
+    pub fn update(transaction: &Transaction, form: &TransactionForm, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::update(transaction)
+            .set(form)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn delete(id: i64, conn: &MoneyManagerDB) -> bool {
-        /*let result = diesel::delete(account_user::table
-            .filter(account_user::id_account.eq(id)))
-            .execute(&**conn);
-        if result.is_ok() {*/
-            diesel::delete(transaction::table.find(id))
-                .execute(&*(*conn))
-                .map_err(|e| warn!("{}", e)).is_ok()
-        /*} else {
-            result.map_err(|e| warn!("{}", e)).is_ok()
-        }*/
+    pub fn delete(transaction: &Transaction, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::delete(transaction)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
 }
 
 impl TransactionDetail {
-    pub fn create(td: TransactionDetail, conn: &MoneyManagerDB) -> bool {
+    pub fn create(td: &TransactionDetail, conn: &MoneyManagerDB) -> bool {
         diesel::insert_into(transaction_detail::table)
-            .values(&td)
-            .execute(&**conn).is_ok()
+            .values(td)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e }).is_ok()
     }
     pub fn read_by_transaction(conn: &MoneyManagerDB, transaction: &Transaction) -> QueryResult<Vec<TransactionDetail>> {
         TransactionDetail::belonging_to(transaction)
-            .load::<TransactionDetail>(&**conn)
+            .load::<TransactionDetail>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read_by_detail(conn: &MoneyManagerDB, detail: &Detail) -> QueryResult<Vec<TransactionDetail>> {
         TransactionDetail::belonging_to(detail)
-            .load::<TransactionDetail>(&**conn)
+            .load::<TransactionDetail>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn read_by_td(conn: &MoneyManagerDB, id_detail: i64, id_transaction: i64) -> QueryResult<TransactionDetail> {
+    pub fn read_by_td(conn: &MoneyManagerDB, detail: &Detail, transaction: &Transaction) -> QueryResult<TransactionDetail> {
         transaction_detail::table
-            .filter(transaction_detail::id_detail.eq(id_detail))
-            .filter(transaction_detail::id_transaction.eq(id_transaction))
-            .first::<TransactionDetail>(&**conn)
+            .filter(transaction_detail::id_detail.eq(detail.id))
+            .filter(transaction_detail::id_transaction.eq(transaction.id))
+            .first::<TransactionDetail>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn update(td: &TransactionDetail, conn: &MoneyManagerDB) -> bool {
-        diesel::update(transaction_detail::table
-            .filter(transaction_detail::id_detail.eq(td.id_detail))
-            .filter(transaction_detail::id_transaction.eq(td.id_transaction)))
+    pub fn update(td: &TransactionDetail, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::update(td)
             .set(td)
-            .execute(&*(*conn)).is_ok()
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn delete_by_td(conn: &MoneyManagerDB, td: &TransactionDetail) -> bool {
-        diesel::delete(td).execute(&**conn).is_ok()
+    pub fn delete(conn: &MoneyManagerDB, td: &TransactionDetail) -> QueryResult<usize> {
+        diesel::delete(td)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn delete(conn: &MoneyManagerDB, transaction: &Transaction, detail: &Detail) -> bool {
+    pub fn delete_by_td(conn: &MoneyManagerDB, transaction: &Transaction, detail: &Detail) -> QueryResult<usize> {
         diesel::delete(transaction_detail::table
             .filter(transaction_detail::id_transaction.eq(transaction.id))
             .filter(transaction_detail::id_detail.eq(detail.id)))
-            .execute(&*(*conn)).is_ok()
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
 }
 
 impl TransactionType {
-    pub fn create(tt: TransactionTypeForm, conn: &MoneyManagerDB) -> QueryResult<TransactionType> {
+    pub fn create(form: &TransactionTypeForm, conn: &MoneyManagerDB) -> QueryResult<TransactionType> {
         diesel::insert_into(transaction_type::table)
-            .values(&tt)
+            .values(form)
             .get_result::<TransactionType>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read(conn: &MoneyManagerDB) -> QueryResult<Vec<TransactionType>> {
-        transaction_type::table.load::<TransactionType>(&**conn)
+        transaction_type::table.load::<TransactionType>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read_by_id(id: i32, conn: &MoneyManagerDB) -> QueryResult<TransactionType> {
         transaction_type::table.find(id).first::<TransactionType>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn update(id: i32, tt: &TransactionTypeForm, conn: &MoneyManagerDB) -> bool {
-        diesel::update(transaction_type::table.find(id))
-            .set(tt)
-            .execute(&*(*conn)).is_ok()
+    pub fn update(tt: &TransactionType, form: &TransactionTypeForm, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::update(tt)
+            .set(form)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn delete(id: i32, conn: &MoneyManagerDB) -> bool {
-        diesel::delete(transaction_type::table.find(id))
-            .execute(&*(*conn)).is_ok()
+    pub fn delete(tt: &TransactionType, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::delete(tt)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
 }

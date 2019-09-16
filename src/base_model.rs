@@ -21,10 +21,15 @@ pub trait BaseModel<T> {
                 if result.len() != 0 {
                     Ok(Json(result))
                 } else {
+                    debug!("Unpack no content!");
+                    // Ok(Json(Vec::new()))
                     Err(Custom(Status::NoContent, String::new()))
                 }
             },
-            Err(e) => Err(Custom(Status::InternalServerError, e.to_string()))
+            Err(e) => {
+                error!("An error occurred during unpack: {}", e);
+                Err(Custom(Status::InternalServerError, e.to_string()))
+            }
         }
     }
 }

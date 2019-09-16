@@ -1,26 +1,27 @@
 
-use serde::Deserialize;
 use rocket_contrib::json::Json;
 use rocket::http::Status;
 use rocket::response::status::Custom;
-use rocket::http::Cookies;
+use diesel::result::Error;
 
 use crate::database::MoneyManagerDB;
 use crate::base_model::BaseModel;
-use crate::transaction::model::{Transaction, TransactionForm, TransactionType, TransactionTypeForm};
-use crate::account::model::AccountUser;
+use crate::base_controller::BaseController;
+use crate::transaction::model::{Transaction, TransactionForm};
+use crate::account;
 use crate::user::model::User;
-use std::intrinsics::transmute;
 
 pub mod model;
 
 mod transaction_type;
 mod transaction_detail;
 
-#[post("/", data = "<transaction>", format = "application/json")]
-fn create(conn: MoneyManagerDB, transaction: Json<TransactionForm>, user: User) -> Result<Json<Transaction>, Status> {
+#[post("/", data = "<json>", format = "application/json")]
+fn create(conn: MoneyManagerDB, json: Json<TransactionForm>, user: User) -> Result<Json<Transaction>, Status> {
     debug!("CREATE_TRANSACTION_REQUEST");
-    Transaction::create(transaction.into_inner(), &conn)
+    let form = json.into_inner();
+    account::check(form.id_account, &user, &conn)?;
+    Transaction::create(&form, &conn)
         .map(|t| {
             info!("transaction create successfully {}", t.id);
             Json(t)
@@ -34,70 +35,39 @@ fn create(conn: MoneyManagerDB, transaction: Json<TransactionForm>, user: User) 
 #[get("/<id>")]
 fn read_one(conn: MoneyManagerDB, id: i64, user: User) -> Result<Json<Transaction>, Status> {
     debug!("READ_ONE_TRANSACTION_REQUEST");
-    let result = Transaction::read_by_id(id, &conn);
-    if result.is_err() {
-        warn!("The user attempts to access transaction that maybe does not exist! {}", result.err().unwrap());
-        return Err(Status::NotFound)
-    }
-    let transaction = result.unwrap();
-    if check_account_property(transaction.id_account, &conn, &user) {
-        Ok(Json(transaction))
-    } else {
-        Err(Status::Forbidden)
-    }
+    let transaction = get_by_id(id, &conn)?;
+    // user can access his own transaction
+    account::check(transaction.id_account, &user, &conn)?;
+    Ok(Json(transaction))
 }
 
 #[get("/account/<id>")]
 pub fn read_by_account(conn: MoneyManagerDB, id: i64, user: User) -> Result<Json<Vec<Transaction>>, Custom<String>> {
     debug!("READ_BY_ACCOUNT_TRANSACTION_REQUEST");
-    if check_account_property(id, &conn, &user) {
-        let result = Transaction::read_by_account(id, &conn);
-        Transaction::unpack(result)
-    } else {
-        Err(Custom(Status::Forbidden, String::new()))
-    }
+    let account = account::get_and_check(id, &user, &conn)
+        .map_err(|s| Custom(s, String::new()))?;
+    let result = Transaction::read_by_account(&account, &conn);
+    Transaction::unpack(result)
 }
 
-#[put("/<id>", data = "<transaction>", format = "application/json")]
-fn update(conn: MoneyManagerDB, id: i64, transaction: Json<TransactionForm>, user: User) -> Status {
+#[put("/<id>", data = "<json>", format = "application/json")]
+fn update(conn: MoneyManagerDB, id: i64, json: Json<TransactionForm>, user: User) -> Result<Status, Status> {
     debug!("UPDATE_TRANSACTION_REQUEST");
+    let transaction = get_by_id(id, &conn)?;
     // check if transaction can be updated
-    let t = Transaction::read_by_id(id, &conn);
-    if t.is_err() {
-        warn!("The user attempts to access transaction that maybe does not exist! {}", t.err().unwrap());
-        return Status::NotFound
-    }
-    if check_account_property(t.unwrap().id_account, &conn, &user) {
-        if Transaction::update(id, &transaction.into_inner(), &conn) {
-            Status::NoContent
-        } else {
-            warn!("The user attempts to update transaction but an error occurred!");
-            Status::InternalServerError
-        }
-    } else {
-        Status::Forbidden
-    }
+    check_property(&transaction, &user, &conn)?;
+    let result = Transaction::update(&transaction, &json.into_inner(), &conn);
+    Transaction::finalize_update_delete(result)
 }
 
 #[delete("/<id>")]
-fn delete(conn: MoneyManagerDB, id: i64, user: User) -> Status {
+fn delete(conn: MoneyManagerDB, id: i64, user: User) -> Result<Status, Status> {
     debug!("DELETE_TRANSACTION_REQUEST");
+    let transaction = get_by_id(id, &conn)?;
     // check if causal can be deleted
-    let t = Transaction::read_by_id(id, &conn);
-    if t.is_err() {
-        warn!("The user attempts to access transaction that maybe does not exist! {}", t.err().unwrap());
-        return Status::NotFound
-    }
-    if check_account_property(t.unwrap().id_account, &conn, &user) {
-        if Transaction::delete(id, &conn) {
-            Status::NoContent
-        } else {
-            warn!("The user attempts to delete transaction but an error occurred!");
-            Status::InternalServerError
-        }
-    } else {
-        Status::Forbidden
-    }
+    check_property(&transaction, &user, &conn)?;
+    let result = Transaction::delete(&transaction, &conn);
+    Transaction::finalize_update_delete(result)
 }
 
 ///
@@ -118,11 +88,34 @@ pub fn mount_transaction_detail(rocket: rocket::Rocket) -> rocket::Rocket {
     rocket.mount("/transaction/detail", transaction_detail::get_mount())
 }
 
-fn check_account_property(id: i64, conn: &MoneyManagerDB, user: &User) -> bool {
-    let au = AccountUser::read_by_au(conn, user, id);
-    if au.is_err() {
-        error!("The user attempts to access some data of transaction that maybe does not belong to it! {}", au.err().unwrap());
-        return false
+///
+///
+pub fn get_and_check(id_transaction: i64, user: &User, conn: &MoneyManagerDB) -> Result<Transaction, Status> {
+    let transaction = get_by_id(id_transaction, conn)?;
+    check_property(&transaction, user, conn)?;
+    Ok(transaction)
+}
+
+// #################################################################################################
+
+fn get_by_id(id: i64, conn: &MoneyManagerDB) -> Result<Transaction, Status> {
+    Transaction::read_by_id(id, &conn)
+        .map_err(|e| {
+            error!("Can not read transaction: {}", e);
+            if e.eq(&Error::NotFound) {
+                Status::NotFound
+            } else {
+                Status::InternalServerError
+            }
+        })
+}
+
+fn check_property(transaction: &Transaction, user: &User, conn: &MoneyManagerDB) -> Result<(), Status> {
+    let c = account::check(transaction.id_account, user, conn);
+    if c.is_err() {
+        warn!("The user attempts to access transaction that does not belong to it!");
+        Err(Status::Forbidden)
+    } else {
+        Ok(())
     }
-    true
 }

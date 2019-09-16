@@ -12,7 +12,7 @@ use crate::database::MoneyManagerDB;
 
 #[table_name = "account"]
 #[belongs_to(AccountType, foreign_key = "id_account_type")]
-#[derive(Debug,Clone,Serialize,Deserialize,Queryable,Identifiable,Associations)]
+#[derive(Debug,Serialize,Deserialize,Queryable,Identifiable,Associations)]
 pub struct Account {
     pub id: i64,
     pub name: String,
@@ -28,10 +28,10 @@ pub struct Account {
 // only for insert and update
 #[table_name = "account"]
 #[derive(Debug,Deserialize,Insertable,AsChangeset)]
-pub struct AccountForm {
-    pub name: String,
+pub struct AccountForm<'a> {
+    pub name: &'a str,
     pub status: bool,
-    pub note: Option<String>,
+    pub note: Option<&'a str>,
     pub current_balance: f64,
     pub initial_balance: f64,
     pub creation_date: DateTime<Utc>,
@@ -40,9 +40,10 @@ pub struct AccountForm {
 }
 
 #[table_name="account_user"]
+#[primary_key(id_account,id_user)]
 #[belongs_to(Account, foreign_key = "id_account")]
 #[belongs_to(User, foreign_key = "id_user")]
-#[derive(Debug,Serialize,Deserialize,Queryable,Insertable,Associations)]
+#[derive(Debug,Serialize,Deserialize,Queryable,Identifiable,Insertable,Associations)]
 pub struct AccountUser {
     pub id_account: i64,
     pub id_user: i64
@@ -52,129 +53,132 @@ pub struct AccountUser {
 #[derive(Debug,Serialize,Deserialize,Queryable,Identifiable)]
 pub struct AccountType {
     pub id: i32,
+    #[serde(rename="type")]
     pub type_: String
 }
 
 // only for insert and update
 #[table_name="account_type"]
 #[derive(Debug,Deserialize,Insertable,AsChangeset)]
-pub struct AccountTypeForm {
-    pub type_: String
+pub struct AccountTypeForm<'a> {
+    #[serde(rename="type")]
+    pub type_: &'a str
 }
 
 impl Account {
-    pub fn create(account: AccountForm, conn: &MoneyManagerDB) -> QueryResult<Account> {
+    pub fn create(form: &AccountForm, conn: &MoneyManagerDB) -> QueryResult<Account> {
         diesel::insert_into(account::table)
-            .values(&account)
+            .values(form)
             .get_result::<Account>(&*(*conn))
+            .map_err(|e| { error!("{}", e); e })
     }
     pub fn read(conn: &MoneyManagerDB) -> QueryResult<Vec<Account>> {
         account::table.load::<Account>(&**conn)
+            .map_err(|e| { error!("{}", e); e })
     }
     pub fn read_by_id(id: i64, conn: &MoneyManagerDB) -> QueryResult<Account> {
         account::table.find(id).first::<Account>(&*(*conn))
+            .map_err(|e| { error!("{}", e); e })
     }
-    pub fn read_by_user(id: i64, conn: &MoneyManagerDB) -> QueryResult<Vec<Account>> {
-        let ids = account_user::table
-            .filter(account_user::id_user.eq(id))
-            .select(account_user::id_account);
-        /*account::table.inner_join(account_user::table)
-            .filter(account_user::id_user.eq(id))
-            .load::<Account>(&**conn)*/
+    pub fn read_by_user(user: &User, conn: &MoneyManagerDB) -> QueryResult<Vec<Account>> {
+        let ids = AccountUser::belonging_to(user)
+            .select(account_user::id_account)
+            .load::<i64>(&*(*conn))
+            .map_err(|e| { error!("{}", e); e })?;
         account::table
             .filter(account::id.eq(any(ids)))
-            .load::<Account>(&**conn)
+            .load::<Account>(&*(*conn))
+            .map_err(|e| { error!("{}", e); e })
     }
-    pub fn update(id: i64, account: &AccountForm, conn: &MoneyManagerDB) -> bool {
-        diesel::update(account::table.find(id))
-            .set(account)
-            .execute(&*(*conn)).is_ok()
+    pub fn update(account: &Account, form: &AccountForm, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::update(account)
+            .set(form)
+            .execute(&*(*conn))
+            .map_err(|e| { error!("{}", e); e })
     }
-    pub fn delete(id: i64, conn: &MoneyManagerDB) -> bool {
-        let res = conn.transaction::<(), Error, _>(|| {
-            // TODO move this on AccountUser implementation
-            diesel::delete(account_user::table
-                .filter(account_user::id_account.eq(id)))
-                .execute(&**conn)
-                .map_err(|e| {
-                    warn!("{}", e);
-                    e
-                })?;
-            diesel::delete(account::table.find(id))
+    pub fn delete(account: &Account, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        conn.transaction::<usize, Error, _>(|| {
+            AccountUser::delete_by_account(account, conn)?; // TODO mettere fuori
+            // TODO delete all the other related data
+            diesel::delete(account)
                 .execute(&*(*conn))
-                .map_err(|e| {
-                    warn!("{}", e);
-                    e
-                })?;
-            Ok(())
-        });
-        res.is_ok()
-        /*let result = diesel::delete(account_user::table
-            .filter(account_user::id_account.eq(id)))
-            .execute(&**conn);
-        if result.is_ok() {
-            diesel::delete(account::table.find(id))
-                .execute(&*(*conn))
-                .map_err(|e| warn!("{}", e)).is_ok()
-        } else {
-            result.map_err(|e| warn!("{}", e)).is_ok()
-        }*/
+                .map_err(|e| { warn!("{}", e); e })
+        })
     }
 }
 
 impl AccountUser {
-    pub fn create(au: AccountUser, conn: &MoneyManagerDB) -> bool {
+    pub fn create(form: &AccountUser, conn: &MoneyManagerDB) -> QueryResult<usize> {
         diesel::insert_into(account_user::table)
-            .values(&au)
-            .execute(&**conn).is_ok()
+            .values(form)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read_by_user(conn: &MoneyManagerDB, user: &User) -> QueryResult<Vec<AccountUser>> {
-        /*AccountUser::belonging_to(user)
-            .load::<AccountUser>(&**conn)*/
-        account_user::table
-            .filter(account_user::id_user.eq(user.id))
-            .load::<AccountUser>(&**conn)
+        AccountUser::belonging_to(user)
+            .load::<AccountUser>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read_by_account(conn: &MoneyManagerDB, account: &Account) -> QueryResult<Vec<AccountUser>> {
-        /*AccountUser::belonging_to(account)
-            .load::<AccountUser>(&**conn)*/
-        account_user::table
-            .filter(account_user::id_account.eq(account.id))
+        AccountUser::belonging_to(account)
             .load::<AccountUser>(&**conn)
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn read_by_au(conn: &MoneyManagerDB, user: &User, id_account: i64) -> QueryResult<AccountUser> {
+    pub fn read_by_au(conn: &MoneyManagerDB, user: &User, account: &Account) -> QueryResult<AccountUser> {
+        AccountUser::read_for_check(conn, user, account.id)
+    }
+    pub fn read_for_check(conn: &MoneyManagerDB, user: &User, id_account: i64) -> QueryResult<AccountUser> {
         account_user::table
             .filter(account_user::id_user.eq(user.id))
             .filter(account_user::id_account.eq(id_account))
-            .first::<AccountUser>(&**conn)
+            .first::<AccountUser>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn delete(conn: &MoneyManagerDB, user: &User, account: &Account) -> bool {
+    pub fn delete(conn: &MoneyManagerDB, user: &User, account: &Account) -> QueryResult<usize> {
         diesel::delete(account_user::table
             .filter(account_user::id_account.eq(account.id))
             .filter(account_user::id_user.eq(user.id)))
-            .execute(&*(*conn)).is_ok()
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
+    }
+    pub fn delete_by_account(account: &Account, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::delete(account_user::table
+            .filter(account_user::id_account.eq(account.id)))
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
+    }
+    pub fn delete_by_user(user: &User, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::delete(account_user::table
+            .filter(account_user::id_user.eq(user.id)))
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
 }
 
 impl AccountType {
-    pub fn create(at: AccountTypeForm, conn: &MoneyManagerDB) -> QueryResult<AccountType> {
+    pub fn create(form: &AccountTypeForm, conn: &MoneyManagerDB) -> QueryResult<AccountType> {
         diesel::insert_into(account_type::table)
-            .values(&at)
+            .values(form)
             .get_result::<AccountType>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read(conn: &MoneyManagerDB) -> QueryResult<Vec<AccountType>> {
-        account_type::table.load::<AccountType>(&**conn)
+        account_type::table.load::<AccountType>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read_by_id(id: i32, conn: &MoneyManagerDB) -> QueryResult<AccountType> {
         account_type::table.find(id).first::<AccountType>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn update(id: i32, at: &AccountTypeForm, conn: &MoneyManagerDB) -> bool {
-        diesel::update(account_type::table.find(id))
-            .set(at)
-            .execute(&*(*conn)).is_ok()
+    pub fn update(at: &AccountType, form: &AccountTypeForm, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::update(at)
+            .set(form)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn delete(id: i32, conn: &MoneyManagerDB) -> bool {
-        diesel::delete(account_type::table.find(id))
-            .execute(&*(*conn)).is_ok()
+    pub fn delete(at: &AccountType, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::delete(at)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
 }

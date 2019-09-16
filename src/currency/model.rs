@@ -7,7 +7,7 @@ use crate::schema::currency;
 use crate::database::MoneyManagerDB;
 
 #[table_name = "currency"]
-#[derive(Debug,Clone,Serialize,Deserialize,Queryable,Identifiable)]
+#[derive(Debug,Serialize,Deserialize,Queryable,Identifiable)]
 pub struct Currency {
     pub id: i16,
     pub description: String
@@ -16,29 +16,34 @@ pub struct Currency {
 // only for insert and update
 #[table_name = "currency"]
 #[derive(Debug,Deserialize,Insertable,AsChangeset)]
-pub struct CurrencyForm {
-    pub description: String
+pub struct CurrencyForm<'a> {
+    pub description: &'a str
 }
 
 impl Currency {
-    pub fn create(currency: CurrencyForm, conn: &MoneyManagerDB) -> QueryResult<Currency> {
+    pub fn create(form: &CurrencyForm, conn: &MoneyManagerDB) -> QueryResult<Currency> {
         diesel::insert_into(currency::table)
-            .values(&currency)
+            .values(form)
             .get_result::<Currency>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read(conn: &MoneyManagerDB) -> QueryResult<Vec<Currency>> {
-        currency::table.load::<Currency>(&**conn)
+        currency::table.load::<Currency>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read_by_id(id: i16, conn: &MoneyManagerDB) -> QueryResult<Currency> {
         currency::table.find(id).first::<Currency>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn update(id: i16, currency: &CurrencyForm, conn: &MoneyManagerDB) -> bool {
-        diesel::update(currency::table.find(id))
-            .set(currency)
-            .execute(&*(*conn)).is_ok()
+    pub fn update(currency: &Currency, form: &CurrencyForm, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::update(currency)
+            .set(form)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn delete(id: i16, conn: &MoneyManagerDB) -> bool {
-        diesel::delete(currency::table.find(id))
-            .execute(&*(*conn)).is_ok()
+    pub fn delete(currency: &Currency, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::delete(currency)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
 }

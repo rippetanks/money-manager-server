@@ -10,6 +10,7 @@ extern crate log4rs;
 
 mod controller;
 mod base_model;
+mod base_controller;
 mod database;
 mod schema;
 
@@ -26,6 +27,6 @@ mod giro;
 fn main() {
     log4rs::init_file("log-config.yml", Default::default()).unwrap();
 
-    let host: String = "/".to_owned();
-    controller::init(&host);
+    let error = controller::init(); // return only on error
+    error!("Launch failed! Error: {}", error);
 }

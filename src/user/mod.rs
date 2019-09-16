@@ -3,13 +3,11 @@ use serde::Deserialize;
 use rocket_contrib::json::Json;
 use rocket::http::Status;
 use rocket::response::status::Custom;
-use rocket::http::Cookies;
 use chrono::NaiveDate;
 
 use crate::database::MoneyManagerDB;
 use crate::base_model::BaseModel;
 use crate::user::model::{User, UserForm};
-use crate::auth::auth::ApiKey;
 
 pub mod model;
 
@@ -50,7 +48,7 @@ fn create(conn: MoneyManagerDB, user: Json<UserJSON>) -> Result<Json<User>, Stat
 /* DISABLED FOR SECURITY REASON */
 #[allow(dead_code)]
 #[get("/")]
-fn read(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<User>>, Custom<String>> {
+fn read(conn: MoneyManagerDB, _user: User) -> Result<Json<Vec<User>>, Custom<String>> {
     debug!("READ_USER_REQUEST");
     let result = User::read(&conn);
     User::unpack(result)
@@ -59,20 +57,20 @@ fn read(conn: MoneyManagerDB, user: User) -> Result<Json<Vec<User>>, Custom<Stri
 /* DISABLED FOR SECURITY REASON */
 #[allow(dead_code)]
 #[get("/<id>")]
-fn read_one(conn: MoneyManagerDB, id: i64, user: User) -> Option<Json<User>> {
+fn read_one(conn: MoneyManagerDB, id: i64, _user: User) -> Option<Json<User>> {
     debug!("READ_ONE_USER_REQUEST");
     let result = User::read_by_id(id, &conn);
     match result {
         Ok(result) => Some(Json(result)),
         Err(e) => {
-            warn!("The user attempts to access user data that does not exist!");
+            warn!("The user attempts to access user data that does not exist! {}", e);
             None
         }
     }
 }
 
 #[get("/user")]
-fn read_for_user(conn: MoneyManagerDB, user: User) -> Json<User> {
+fn read_for_user(user: User) -> Json<User> {
     debug!("READ_FOR_USER_REQUEST");
     info!("The user {} has accessed his user private data!", user.id);
     Json(user)

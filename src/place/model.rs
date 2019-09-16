@@ -9,7 +9,7 @@ use crate::database::MoneyManagerDB;
 
 #[table_name = "place"]
 #[belongs_to(User, foreign_key = "id_user")]
-#[derive(Debug,Clone,Serialize,Deserialize,Queryable,Identifiable,Associations)]
+#[derive(Debug,Serialize,Deserialize,Queryable,Identifiable,Associations)]
 pub struct Place {
     pub id: i64,
     pub name: String,
@@ -25,8 +25,8 @@ pub struct Place {
 // only for insert and update
 #[table_name = "place"]
 #[derive(Debug,Deserialize,Insertable,AsChangeset)]
-pub struct PlaceForm {
-    pub name: String,
+pub struct PlaceForm<'a> {
+    pub name: &'a str,
     pub address: Option<String>,
     pub country: Option<String>,
     pub email: Option<String>,
@@ -37,30 +37,35 @@ pub struct PlaceForm {
 }
 
 impl Place {
-    pub fn create(place: PlaceForm, conn: &MoneyManagerDB) -> QueryResult<Place> {
+    pub fn create(form: &PlaceForm, conn: &MoneyManagerDB) -> QueryResult<Place> {
         diesel::insert_into(place::table)
-            .values(&place)
+            .values(form)
             .get_result::<Place>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read(conn: &MoneyManagerDB) -> QueryResult<Vec<Place>> {
-        place::table.load::<Place>(&**conn)
+        place::table.load::<Place>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
     pub fn read_by_id(id: i64, conn: &MoneyManagerDB) -> QueryResult<Place> {
         place::table.find(id).first::<Place>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn read_by_user(id: i64, conn: &MoneyManagerDB) -> QueryResult<Vec<Place>> {
+    pub fn read_by_user(user: &User, conn: &MoneyManagerDB) -> QueryResult<Vec<Place>> {
         place::table
-            .filter(place::id_user.eq(id))
-            .load::<Place>(&**conn)
+            .filter(place::id_user.eq(user.id))
+            .load::<Place>(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn update(id: i64, place: &PlaceForm, conn: &MoneyManagerDB) -> bool {
-        diesel::update(place::table.find(id))
-            .set(place)
-            .execute(&*(*conn)).is_ok()
-    }
-    pub fn delete(id: i64, conn: &MoneyManagerDB) -> bool {
-        diesel::delete(place::table.find(id))
+    pub fn update(place: &Place, form: &PlaceForm, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::update(place)
+            .set(form)
             .execute(&*(*conn))
-            .map_err(|e| warn!("{}", e)).is_ok()
+            .map_err(|e| { warn!("{}", e); e })
+    }
+    pub fn delete(place: &Place, conn: &MoneyManagerDB) -> QueryResult<usize> {
+        diesel::delete(place)
+            .execute(&*(*conn))
+            .map_err(|e| { warn!("{}", e); e })
     }
 }

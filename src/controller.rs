@@ -1,5 +1,6 @@
 
 use rocket::fairing::AdHoc;
+use rocket::error::LaunchError;
 
 use crate::database::MoneyManagerDB;
 use crate::causal;
@@ -18,25 +19,19 @@ pub struct Extras {
     pub jwt_exp: u64
 }
 
+/*
 #[get("/")]
 fn index() -> &'static str {
     "Hello, world!"
 }
+*/
 
-pub fn init(host: &String) {
+pub fn init() -> LaunchError {
     let mut rocket = rocket::ignite()
         .attach(MoneyManagerDB::fairing())
-        .attach(AdHoc::on_attach("Extras Fairing", |rocket| {
-            let config = rocket.config();
-            let jwt_key = config.get_str("jwt_key").unwrap().to_string();
-            let jwt_exp = config.get_int("jwt_exp").unwrap() as u64;
-            Ok(rocket.manage(Extras {
-                jwt_key,
-                jwt_exp
-            }))
-        }));
+        .attach(fairing_extra());
 
-    rocket = rocket.mount(host, routes![index]);
+    // rocket = rocket.mount(host, routes![index]);
     rocket = causal::mount(rocket);
     rocket = user::mount(rocket);
     rocket = auth::mount(rocket);
@@ -50,5 +45,17 @@ pub fn init(host: &String) {
     rocket = detail::mount(rocket);
     rocket = giro::mount(rocket);
 
-    rocket.launch();
+    rocket.launch()
+}
+
+fn fairing_extra() -> rocket::fairing::AdHoc {
+    AdHoc::on_attach("Extras Fairing", |rocket| {
+        let config = rocket.config();
+        let jwt_key = config.get_str("jwt_key").unwrap().to_string();
+        let jwt_exp = config.get_int("jwt_exp").unwrap() as u64;
+        Ok(rocket.manage(Extras {
+            jwt_key,
+            jwt_exp
+        }))
+    })
 }
