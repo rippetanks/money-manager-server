@@ -5,7 +5,7 @@
 -- Dumped from database version 10.6
 -- Dumped by pg_dump version 10.6
 
--- Started on 2019-09-16 20:53:05
+-- Started on 2019-09-19 20:33:47
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -16,6 +16,45 @@ SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- TOC entry 2929 (class 1262 OID 16616)
+-- Name: money-manager; Type: DATABASE; Schema: -; Owner: postgres
+--
+
+CREATE DATABASE "money-manager" WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'Italian_Italy.1252' LC_CTYPE = 'Italian_Italy.1252';
+
+
+ALTER DATABASE "money-manager" OWNER TO postgres;
+
+\connect -reuse-previous=on "dbname='money-manager'"
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 1 (class 3079 OID 12924)
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- TOC entry 2931 (class 0 OID 0)
+-- Dependencies: 1
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
 
 --
 -- TOC entry 221 (class 1255 OID 16881)
@@ -90,7 +129,7 @@ CREATE SEQUENCE public."AccountType_id_seq"
 ALTER TABLE public."AccountType_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2930 (class 0 OID 0)
+-- TOC entry 2932 (class 0 OID 0)
 -- Dependencies: 196
 -- Name: AccountType_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -134,7 +173,7 @@ CREATE SEQUENCE public."Account_id_seq"
 ALTER TABLE public."Account_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2931 (class 0 OID 0)
+-- TOC entry 2933 (class 0 OID 0)
 -- Dependencies: 200
 -- Name: Account_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -175,7 +214,7 @@ CREATE SEQUENCE public."Auth_id_seq"
 ALTER TABLE public."Auth_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2932 (class 0 OID 0)
+-- TOC entry 2934 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: Auth_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -213,7 +252,7 @@ CREATE SEQUENCE public."Causal_id_seq"
 ALTER TABLE public."Causal_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2933 (class 0 OID 0)
+-- TOC entry 2935 (class 0 OID 0)
 -- Dependencies: 203
 -- Name: Causal_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -251,7 +290,7 @@ CREATE SEQUENCE public."Currency_id_seq"
 ALTER TABLE public."Currency_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2934 (class 0 OID 0)
+-- TOC entry 2936 (class 0 OID 0)
 -- Dependencies: 214
 -- Name: Currency_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -289,7 +328,7 @@ CREATE SEQUENCE public."Detail_id_seq"
 ALTER TABLE public."Detail_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2935 (class 0 OID 0)
+-- TOC entry 2937 (class 0 OID 0)
 -- Dependencies: 212
 -- Name: Detail_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -332,7 +371,7 @@ CREATE SEQUENCE public."Giro_id_seq"
 ALTER TABLE public."Giro_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2936 (class 0 OID 0)
+-- TOC entry 2938 (class 0 OID 0)
 -- Dependencies: 210
 -- Name: Giro_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -370,7 +409,7 @@ CREATE SEQUENCE public."TransactionType_id_seq"
 ALTER TABLE public."TransactionType_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2937 (class 0 OID 0)
+-- TOC entry 2939 (class 0 OID 0)
 -- Dependencies: 206
 -- Name: TransactionType_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -416,7 +455,7 @@ CREATE SEQUENCE public."Transaction_id_seq"
 ALTER TABLE public."Transaction_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2938 (class 0 OID 0)
+-- TOC entry 2940 (class 0 OID 0)
 -- Dependencies: 208
 -- Name: Transaction_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -459,7 +498,7 @@ CREATE SEQUENCE public."User_id_seq"
 ALTER TABLE public."User_id_seq" OWNER TO postgres;
 
 --
--- TOC entry 2939 (class 0 OID 0)
+-- TOC entry 2941 (class 0 OID 0)
 -- Dependencies: 198
 -- Name: User_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -529,7 +568,7 @@ CREATE SEQUENCE public.place_id_seq
 ALTER TABLE public.place_id_seq OWNER TO postgres;
 
 --
--- TOC entry 2940 (class 0 OID 0)
+-- TOC entry 2942 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: place_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -919,7 +958,7 @@ ALTER TABLE ONLY public.transaction
     ADD CONSTRAINT transaction_type_fk FOREIGN KEY (id_transaction_type) REFERENCES public.transaction_type(id);
 
 
--- Completed on 2019-09-16 20:53:06
+-- Completed on 2019-09-19 20:33:48
 
 --
 -- PostgreSQL database dump complete

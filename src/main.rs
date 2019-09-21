@@ -41,7 +41,12 @@ mod detail;
 mod giro;
 
 fn main() {
-    log4rs::init_file("log-config.yml", Default::default()).unwrap();
+    let path = if cfg!(windows) {
+        "log-config.yml"
+    } else {
+        "/etc/money-manager/log-config.yml"
+    };
+    log4rs::init_file(path, Default::default()).unwrap();
 
     let error = controller::init(); // return only on error
     error!("Launch failed! Error: {}", error);
