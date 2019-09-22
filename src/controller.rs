@@ -17,6 +17,7 @@
 
 use rocket::fairing::AdHoc;
 use rocket::error::LaunchError;
+use rocket_cors::{AllowedOrigins, CorsOptions, Cors};
 
 use crate::database::MoneyManagerDB;
 use crate::causal;
@@ -43,11 +44,13 @@ fn index() -> &'static str {
 */
 
 pub fn init() -> LaunchError {
+
     let mut rocket = rocket::ignite()
         .attach(MoneyManagerDB::fairing())
+        .attach(enable_cors())
         .attach(fairing_extra());
 
-    // rocket = rocket.mount(host, routes![index]);
+    // rocket = rocket.mount("/", routes![index]);
     rocket = causal::mount(rocket);
     rocket = user::mount(rocket);
     rocket = auth::mount(rocket);
@@ -62,6 +65,14 @@ pub fn init() -> LaunchError {
     rocket = giro::mount(rocket);
 
     rocket.launch()
+}
+
+fn enable_cors() -> Cors{
+    let options = CorsOptions {
+        allowed_origins: AllowedOrigins::some_exact(&["http://rippetanks.ddns.net", "http://localhost"]),
+        ..Default::default()
+    };
+    CorsOptions::to_cors(&options).unwrap()
 }
 
 fn fairing_extra() -> rocket::fairing::AdHoc {
