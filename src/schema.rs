@@ -49,7 +49,9 @@ table! {
 table! {
     currency (id) {
         id -> Int2,
-        description -> Varchar,
+        name -> Varchar,
+        code -> Bpchar,
+        number -> Int2,
     }
 }
 

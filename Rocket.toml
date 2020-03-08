@@ -5,4 +5,4 @@ jwt_key = "pluto"
 jwt_exp = 900
 
 [development.databases]
-db = { url = "postgres://postgres:postgres@localhost:5433/money-manager" }
+db = { url = "postgres://postgres:postgres@localhost:5432/money-manager" }

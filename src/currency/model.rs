@@ -26,14 +26,18 @@ use crate::database::MoneyManagerDB;
 #[derive(Debug,Serialize,Deserialize,Queryable,Identifiable)]
 pub struct Currency {
     pub id: i16,
-    pub description: String
+    pub name: String,
+    pub code: String,
+    pub number: i16
 }
 
 // only for insert and update
 #[table_name = "currency"]
 #[derive(Debug,Deserialize,Insertable,AsChangeset)]
 pub struct CurrencyForm<'a> {
-    pub description: &'a str
+    pub name: &'a str,
+    pub code: &'a str,
+    pub number: i16
 }
 
 impl Currency {

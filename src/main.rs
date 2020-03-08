@@ -24,6 +24,8 @@
 #[macro_use] extern crate log;
 extern crate log4rs;
 
+use std::path::Path;
+
 mod controller;
 mod base_model;
 mod base_controller;
@@ -44,7 +46,12 @@ fn main() {
     let path = if cfg!(windows) {
         "log-config.yml"
     } else {
-        "/etc/money-manager/log-config.yml"
+        let path = "/etc/money-manager/log-config.yml";
+        if Path::new(path).exists() {
+            path
+        } else {
+            "log-config.yml"
+        }
     };
     log4rs::init_file(path, Default::default()).unwrap();
 
