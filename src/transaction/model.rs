@@ -105,9 +105,12 @@ impl Transaction {
         transaction::table.find(id).first::<Transaction>(&*(*conn))
             .map_err(|e| { warn!("{}", e); e })
     }
-    pub fn read_by_account(account: &Account, conn: &MoneyManagerDB) -> QueryResult<Vec<Transaction>> {
+    pub fn read_by_account(account: &Account, conn: &MoneyManagerDB, offset: i64,
+                           limit: i64) -> QueryResult<Vec<Transaction>> {
         transaction::table
             .filter(transaction::id_account.eq(account.id))
+            .offset(offset)
+            .limit(limit)
             .load::<Transaction>(&*(*conn))
             .map_err(|e| { warn!("{}", e); e })
     }

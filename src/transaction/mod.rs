@@ -57,12 +57,15 @@ fn read_one(conn: MoneyManagerDB, id: i64, user: User) -> Result<Json<Transactio
     Ok(Json(transaction))
 }
 
-#[get("/account/<id>")]
-pub fn read_by_account(conn: MoneyManagerDB, id: i64, user: User) -> Result<Json<Vec<Transaction>>, Custom<String>> {
+#[get("/account/<id>?<limit>&<offset>")]
+pub fn read_by_account(conn: MoneyManagerDB, id: i64, user: User, limit: Option<i64>,
+                       offset: Option<i64>) -> Result<Json<Vec<Transaction>>, Custom<String>> {
     debug!("READ_BY_ACCOUNT_TRANSACTION_REQUEST");
     let account = account::get_and_check(id, &user, &conn)
         .map_err(|s| Custom(s, String::new()))?;
-    let result = Transaction::read_by_account(&account, &conn);
+    let result = Transaction::read_by_account(&account, &conn,
+                                              offset.unwrap_or(0),
+                                              limit.unwrap_or(i64::max_value()));
     Transaction::unpack(result)
 }
 
